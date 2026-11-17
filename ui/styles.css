@@ -156,7 +156,7 @@ p {
   letter-spacing: -0.015em;
 }
 
-.side-add {
+.btn.side-add {
   justify-content: flex-start;
   margin-bottom: 14px;
 }
@@ -981,6 +981,11 @@ select.input {
 
 .cut-body {
   padding: 2px 0 22px;
+}
+
+/* Строки подряд — сплошным списком, без промежутка раздела. */
+.cut-body > .row + .row {
+  margin-top: -8px;
 }
 
 /* Своя полоса окна на компьютере: того же цвета, что приложение; цвет можно сменить (--tb-bg, --tb-ink). */
