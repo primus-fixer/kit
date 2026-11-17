@@ -12,6 +12,7 @@
 | PIN-код: хеш и паузы после ошибок; название приложения для сообщений | `crates/kit-core` | 0.1.0 |
 | Вход: PIN-код, отпечаток, Windows Hello, автоблокировка — команды для экрана | `crates/kit-tauri` | 0.1.0 |
 | Правила дизайна: кнопки, отступы, шрифты, экраны | [docs/design.md](docs/design.md) | 0.1.0 |
+| Сборки: установщик для Windows, APK для Android, общая донастройка Android | `.github/workflows/windows.yml`, `android.yml`, `scripts/android-patch.sh` | 0.2.0 |
 
 Что переедет дальше и в каком порядке — [docs/plan.md](docs/plan.md).
 
@@ -49,6 +50,41 @@ pub const KEYS: KeyNames = KeyNames { dpapi_entropy: b"polka-db-key-v1", dpapi_l
 
 Перед работой с данными приложение спрашивает `lock.check()`: пока оно заблокировано, ответ — `locked`.
 
+## Сборки
+
+Сценарий сборок приложения вызывает общие сценарии kit. Приложение лежит в папке `app/` (Tauri 2, npm);
+имя программы, название и версия берутся из `app/src-tauri/tauri.conf.json`.
+
+```yaml
+jobs:
+  windows:
+    uses: primus-fixer/kit/.github/workflows/windows.yml@<версия kit>
+    with:
+      mcp-tool: add_title            # проверить, что «polka.exe --mcp» знает этот инструмент; можно не задавать
+  android:
+    uses: primus-fixer/kit/.github/workflows/android.yml@<версия kit>
+    with:
+      title: Полка                   # название под иконкой
+      key-alias: polka               # псевдоним ключа подписи, если нет секрета ANDROID_KEY_ALIAS
+      kit-ref: <та же версия kit>
+    secrets:
+      ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+```
+
+- **Windows:** установщик `.exe` и `.msi` в артефакте `<программа>-windows`. Перед сборкой можно
+  проверить пакеты Rust на Windows (`tests: -p …`), после — ответ коннектора для Claude (`mcp-tool`).
+- **Android:** `<Название>-<версия>.apk` в артефакте `<программа>-android`. С секретами
+  `ANDROID_KEYSTORE` и `ANDROID_KEYSTORE_PASSWORD` APK подписан постоянным ключом и ставится поверх
+  прежнего, без них — отладочная сборка.
+- **Донастройка Android:** сначала общий `scripts/android-patch.sh` kit — название под иконкой, иконки,
+  разрешения сети, запрет копии Android, targetSdk; затем свой `scripts/android-patch.sh` приложения,
+  если он есть, — главное окно, «Поделиться», виджеты.
+
+Когда запускать сборки, решает приложение (`on:` в своём сценарии). Общий скрипт проверяется
+на образце проекта `tauri android init` (`scripts/test-android-patch.sh`).
+
 ## Правила
 
 - **Форматы не меняются.** Базы, резервные копии, файлы в облаке и связь устройств, сделанные
@@ -62,6 +98,7 @@ pub const KEYS: KeyNames = KeyNames { dpapi_entropy: b"polka-db-key-v1", dpapi_l
 
 ```
 cargo test
+bash scripts/test-android-patch.sh
 ```
 
 На Windows дополнительно проверяется, что ключ, сохранённый «Полкой» и «Карманом» до модуля,
