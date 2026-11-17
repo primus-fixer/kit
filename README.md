@@ -13,7 +13,7 @@
 | Вход: PIN-код, отпечаток, Windows Hello, автоблокировка — команды для экрана | `crates/kit-tauri` | 0.1.0 |
 | Правила дизайна: кнопки, отступы, шрифты, экраны | [docs/design.md](docs/design.md) | 0.1.0 |
 | Сборки: установщик для Windows, APK для Android, общая донастройка Android | `.github/workflows/windows.yml`, `android.yml`, `scripts/android-patch.sh` | 0.2.0 |
-| Интерфейс: цвета и темы, шрифты, общие стили, элементы экрана, своя полоса окна, экран входа | `ui/` (пакет npm `@primus-fixer/kit`) | 0.3.0 |
+| Интерфейс: цвета и темы, шрифты, общие стили, элементы экрана, своя полоса окна, экран входа | `ui/` (пакет npm `@primus-fixer/kit`) | 0.3.0; экран входа отдельным файлом стилей — 0.5.0 |
 | Коннектор для Claude: протокол MCP, доказательство ключа связи, файл расширения `.mcpb` | `crates/kit-core` (`mcp`) | 0.4.0 |
 
 Что переедет дальше и в каком порядке — [docs/plan.md](docs/plan.md).
@@ -72,6 +72,10 @@ import '@primus-fixer/kit/ui/fonts';
 import '@primus-fixer/kit/ui/styles.css';
 import './styles.css';
 ```
+
+Приложение, которое ещё не перешло на стили kit целиком, может взять только экран входа: вместо
+`styles.css` — `@primus-fixer/kit/ui/lock.css` (он самостоятельный: нужны только переменные цветов
+из `applyTheme`). Так сейчас сделано в «Кармане».
 
 Что есть в `@primus-fixer/kit/ui`:
 
