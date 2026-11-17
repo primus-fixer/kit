@@ -1,0 +1,61 @@
+name: Проверки
+
+on:
+  push:
+  workflow_dispatch:
+
+# Проверкам токен GitHub нужен только для чтения кода.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux — тесты
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: linux
+      - name: Библиотеки WebKit для Tauri
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libsoup-3.0-dev
+      - run: cargo test
+      - run: cargo clippy --all-targets -- -D warnings
+
+  windows:
+    name: Windows — ключ в DPAPI и вход
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: windows
+      # Ключ, сохранённый приложениями до модуля, открывается модулем.
+      - run: cargo test -p kit-secure -p kit-core
+      # Вход с Windows Hello здесь только собирается: проверочная программа с Tauri на Windows
+      # не запускается без описания окна (0xc0000139), сами проверки входа идут на Linux.
+      - run: cargo check -p kit-tauri --all-targets
+
+  android:
+    name: Android — ключ в Keystore собирается
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: android
+      # Только код работы с Keystore; вход целиком собирается сборкой приложения под Android.
+      - run: cargo check -p kit-secure -p kit-core --target aarch64-linux-android
