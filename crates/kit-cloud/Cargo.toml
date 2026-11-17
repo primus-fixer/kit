@@ -1,0 +1,18 @@
+[package]
+name = "kit-cloud"
+description = "Облака приложений: клиент WebDAV (Яндекс Диск по паролю приложения, Nextcloud, NAS) и запросы к облаку"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[features]
+# Имитация сервера WebDAV — для проверок и сквозных тестов.
+mock = []
+
+[dependencies]
+kit-core = { path = "../kit-core" }
+base64 = "0.22"
+serde = "1"
+serde_json = "1"
+ureq = { version = "3", default-features = false, features = ["rustls"] }
