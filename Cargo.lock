@@ -1719,6 +1719,7 @@ dependencies = [
  "kit-core",
  "kit-secure",
  "serde",
+ "serde_json",
  "tauri",
  "tauri-plugin-biometric",
 ]
