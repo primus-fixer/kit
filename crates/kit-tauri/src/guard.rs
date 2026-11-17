@@ -555,7 +555,7 @@ mod tests {
     use std::collections::BTreeMap;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
-    const APP: AppNames = AppNames { id: "kittest", name: "Проба", name_acc: "Пробу", name_gen: "Пробы" };
+    const APP: AppNames = AppNames { id: "kittest", name: "Проба", name_acc: "Пробу", name_gen: "Пробы", feminine: true };
 
     /// Местные настройки в памяти; копии смотрят в одно место.
     #[derive(Clone, Default)]

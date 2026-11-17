@@ -14,7 +14,7 @@ use tauri::test::{get_ipc_response, mock_builder, mock_context, noop_assets, Moc
 use tauri::webview::InvokeRequest;
 use tauri::{WebviewWindow, WebviewWindowBuilder};
 
-const APP: AppNames = AppNames { id: "kittest", name: "Проба", name_acc: "Пробу", name_gen: "Пробы" };
+const APP: AppNames = AppNames { id: "kittest", name: "Проба", name_acc: "Пробу", name_gen: "Пробы", feminine: true };
 
 #[derive(Clone, Default)]
 struct MemMeta(Arc<Mutex<BTreeMap<String, String>>>);
