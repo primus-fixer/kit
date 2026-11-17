@@ -7,6 +7,7 @@
 //! изменений — см. `docs/plan.md`.
 
 pub mod backup;
+pub mod cloud;
 pub mod error;
 pub mod lan;
 pub mod link;

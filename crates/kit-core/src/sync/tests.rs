@@ -86,7 +86,7 @@ impl Journal for Mem {
         Ok(self.blobs.get(id).cloned())
     }
     fn put_blob_checked(&mut self, id: &str, mime: &str, data: &[u8]) -> Result<()> {
-        if id != format!("b-{}", data.len()) {
+        if id != format!("b-{}", data.len()) && id != crate::cloud::blob_id(data) {
             return Err(Error::Format("отпечаток не сошёлся".into()));
         }
         self.blobs.insert(id.into(), (mime.into(), data.to_vec()));

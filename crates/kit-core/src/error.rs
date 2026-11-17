@@ -30,6 +30,11 @@ pub enum Error {
     /// Связь по Wi-Fi: что случилось ([`crate::lan::LanFail`]) и что сказать человеку.
     #[error("{1}")]
     Lan(crate::lan::LanFail, String),
+    /// Облако: что случилось ([`crate::cloud::CloudFail`]) и что сказать человеку.
+    #[error("{1}")]
+    Cloud(crate::cloud::CloudFail, String),
+    #[error("Пароль не подходит: облако зашифровано другим паролем копий")]
+    CloudPassword,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
