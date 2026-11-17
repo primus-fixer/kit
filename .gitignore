@@ -1,0 +1,11 @@
+/target
+node_modules
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+
+# Ключи подписи и секреты — только вне репозитория
+*.jks
+*.keystore
+*-secrets.txt
