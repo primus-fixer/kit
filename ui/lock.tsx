@@ -238,7 +238,7 @@ export function LockScreen({ status, api, names, onUnlocked }: { status: LockSta
   return (
     <div className="lock" role="dialog" aria-modal="true" aria-label={`Вход в «${names.nameAcc}»`} tabIndex={-1} ref={rootRef}>
       <p className="lockname">{names.name}</p>
-      <p className={'lock-hint' + (h.warn ? ' warn-text' : ' muted')} aria-live="polite">
+      <p className={'lock-hint' + (h.warn ? ' lock-warn' : '')} aria-live="polite">
         {h.text}
       </p>
       <PinPad
@@ -248,11 +248,11 @@ export function LockScreen({ status, api, names, onUnlocked }: { status: LockSta
         shake={shake}
         extra={canBio ? { icon: 'finger', label: bio.verb, onPress: () => call(api.bioUnlock) } : null}
       />
-      <button type="button" className="link-btn lock-forgot" disabled={busy} onClick={() => call(api.pinRecover)}>
+      <button type="button" className="lock-forgot" disabled={busy} onClick={() => call(api.pinRecover)}>
         Забыли PIN?
       </button>
       {st.recover && (
-        <p className="small muted lock-note">{st.recover === 'hello' ? 'Подтвердите себя через Windows Hello и задайте новый PIN.' : 'Подтвердите себя блокировкой экрана телефона и задайте новый PIN.'}</p>
+        <p className="lock-note">{st.recover === 'hello' ? 'Подтвердите себя через Windows Hello и задайте новый PIN.' : 'Подтвердите себя блокировкой экрана телефона и задайте новый PIN.'}</p>
       )}
     </div>
   );
@@ -311,11 +311,11 @@ export function PinFlow({ mode, api, onDone, onClose }: { mode: PinMode; api: Lo
   const title = step === 'current' ? 'Текущий PIN-код' : step === 'new' ? (mode === 'reset' ? 'Новый PIN-код' : 'Придумайте PIN-код') : 'Повторите PIN-код';
   return (
     <div className="lock" role="dialog" aria-modal="true" aria-label={title}>
-      <button type="button" className="icon-btn lockclose" aria-label="Закрыть" onClick={onClose}>
+      <button type="button" className="lockclose" aria-label="Закрыть" onClick={onClose}>
         <Icon name="x" size={22} stroke={2} />
       </button>
       <p className="lockname small-name">{title}</p>
-      <p className={'lock-hint' + (error ? ' warn-text' : ' muted')} aria-live="polite">
+      <p className={'lock-hint' + (error ? ' lock-warn' : '')} aria-live="polite">
         {error || (step === 'new' ? '4 цифры. Его будет спрашивать только это устройство' : step === 'confirm' ? 'Ещё раз, чтобы не ошибиться' : '')}
       </p>
       <PinPad onComplete={onCode} disabled={busy} reset={reset} shake={shake} />
