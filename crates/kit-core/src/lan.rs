@@ -86,6 +86,10 @@ pub struct Lan {
     pub personal: &'static [u8],
     /// Ответ на чужое подключение: «это не „Полка“».
     pub not_ours: &'static str,
+    /// QR-код связи: начало адреса (`polka://pair?`) и версия, в которой в нём код связи
+    /// (у «Полки» — 1, у «Кармана» — 2: до 0.15 в версии 1 был ключ).
+    pub qr_scheme: &'static str,
+    pub qr_version: u32,
 }
 
 impl Lan {
@@ -245,6 +249,67 @@ pub fn is_local_address(host: &str) -> bool {
         }
         Err(_) => false,
     }
+}
+
+/// QR-код связи: адрес устройства в сети и код связи. Ключа в нём нет.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize, serde::Deserialize)]
+pub struct Invite {
+    pub device: String,
+    pub name: String,
+    pub hosts: Vec<String>,
+    pub port: u16,
+    pub code: String,
+}
+
+impl Invite {
+    /// Текст QR-кода: `polka://pair?v=1&d=…&n=…&h=…&p=…&c=…`.
+    pub fn to_uri(&self, lan: &Lan) -> String {
+        use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+        format!("{}v={}&d={}&n={}&h={}&p={}&c={}", lan.qr_scheme, lan.qr_version, self.device, URL_SAFE_NO_PAD.encode(self.name.as_bytes()), self.hosts.join(","), self.port, self.code)
+    }
+
+    /// Разбирает QR-код связи этого приложения. Другой версии — просьба обновиться
+    /// (прежние версии, если они есть, приложение разбирает само до этого).
+    pub fn parse(lan: &Lan, uri: &str) -> Result<Invite> {
+        use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+        let bad = |m: &str| Error::Format(m.to_string());
+        let Some(q) = uri.trim().strip_prefix(lan.qr_scheme) else {
+            return Err(bad(&format!("это не QR-код «{}» для связи", lan.names.name_gen)));
+        };
+        let mut fields = BTreeMap::new();
+        for part in q.split('&') {
+            let (k, v) = part.split_once('=').ok_or_else(|| bad("испорченный QR-код связи"))?;
+            fields.insert(k, v);
+        }
+        if fields.get("v").copied() != Some(lan.qr_version.to_string().as_str()) {
+            return Err(bad(&format!("QR-код от более новой версии приложения: обновите «{}» на этом устройстве", lan.names.name_acc)));
+        }
+        let unreadable = || bad("имя устройства не читается");
+        let name = match fields.get("n") {
+            Some(v) => String::from_utf8(URL_SAFE_NO_PAD.decode(v).map_err(|_| unreadable())?).map_err(|_| unreadable())?,
+            None => String::new(),
+        };
+        let hosts: Vec<String> = fields.get("h").map(|h| h.split(',').filter(|h| !h.is_empty()).map(String::from).collect()).unwrap_or_default();
+        if hosts.is_empty() {
+            return Err(bad("в QR нет адреса"));
+        }
+        let hosts: Vec<String> = hosts.into_iter().filter(|h| is_local_address(h)).collect();
+        if hosts.is_empty() {
+            return Err(bad("в QR-коде адрес не из домашней сети: связь — только между устройствами в одной сети Wi-Fi"));
+        }
+        let device = fields.get("d").filter(|d| !d.is_empty() && d.len() <= 64).ok_or_else(|| bad("в QR нет устройства"))?.to_string();
+        let port = fields.get("p").and_then(|p| p.parse::<u16>().ok()).ok_or_else(|| bad("в QR нет порта"))?;
+        let code = normalize_code(fields.get("c").copied().unwrap_or(""))?;
+        Ok(Invite { device, name, hosts, port, code })
+    }
+}
+
+/// Что нужно связи по Wi-Fi в приложении от базы сверх обмена: местные настройки (связанные устройства
+/// хранятся там и в обмен не уходят) и число событий в журнале (изменилось — пора обменяться).
+pub trait Device: crate::sync::Journal + Send + 'static {
+    fn local(&self, key: &str) -> Option<String>;
+    fn set_local(&self, key: &str, value: &str) -> Result<()>;
+    fn event_count(&self) -> u64;
 }
 
 /// Показанный код связи.

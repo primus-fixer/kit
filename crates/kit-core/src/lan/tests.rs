@@ -18,6 +18,8 @@ const POLKA_LAN: Lan = Lan {
     host: b"polka-host",
     personal: b"polka-lan",
     not_ours: "это не «Полка»",
+    qr_scheme: "polka://pair?",
+    qr_version: 1,
 };
 
 /// Как у «Кармана» 0.15.
@@ -33,6 +35,8 @@ const KARMAN_LAN: Lan = Lan {
     host: b"karman-host",
     personal: b"karman-lan",
     not_ours: "это не «Карман» 0.15 или новее",
+    qr_scheme: "karman://pair?",
+    qr_version: 2,
 };
 
 fn hex(b: [u8; 32]) -> String {
@@ -462,4 +466,20 @@ fn codes_are_random_readable_and_forgiving() {
     assert!(normalize_code("6WVG-HEW").unwrap_err().to_string().contains("восемь знаков"));
     assert!(normalize_code("6WVG-HEW0").unwrap_err().to_string().contains("«0»"), "нуля в коде не бывает");
     assert!(normalize_code("6WVG-HEWЖ").unwrap_err().to_string().contains("«Ж»"));
+}
+
+#[test]
+fn invite_qr_roundtrip() {
+    let inv = Invite { device: "a1b2".into(), name: "Ноутбук".into(), hosts: vec!["192.168.1.20".into(), "8.8.8.8".into()], port: 47_510, code: "6WVGHEWK".into() };
+    assert!(inv.to_uri(&POLKA_LAN).starts_with("polka://pair?v=1&d=a1b2&"));
+    assert!(inv.to_uri(&KARMAN_LAN).starts_with("karman://pair?v=2&d=a1b2&"));
+    let back = Invite::parse(&POLKA_LAN, &inv.to_uri(&POLKA_LAN)).unwrap();
+    assert_eq!(back, Invite { hosts: vec!["192.168.1.20".into()], ..inv.clone() }, "адрес из интернета отброшен");
+    let only_internet = Invite { hosts: vec!["8.8.8.8".into()], ..inv.clone() };
+    assert!(Invite::parse(&POLKA_LAN, &only_internet.to_uri(&POLKA_LAN)).unwrap_err().to_string().contains("не из домашней сети"));
+    assert!(Invite::parse(&POLKA_LAN, &inv.to_uri(&POLKA_LAN).replace("c=6WVGHEWK", "c=123")).is_err());
+    assert!(Invite::parse(&POLKA_LAN, "polka://pair?v=2&d=x").unwrap_err().to_string().contains("обновите «Полку»"));
+    assert_eq!(Invite::parse(&POLKA_LAN, &inv.to_uri(&KARMAN_LAN)).unwrap_err().to_string(), "это не QR-код «Полки» для связи");
+    assert!(Invite::parse(&KARMAN_LAN, "karman://pair?v=3&d=x").unwrap_err().to_string().contains("обновите «Карман»"));
+    assert!(Invite::parse(&KARMAN_LAN, "https://example.com").is_err());
 }
