@@ -1,0 +1,32 @@
+{
+  "name": "@primus-fixer/kit",
+  "version": "0.3.0",
+  "description": "Общий интерфейс приложений на kit: тема, элементы экрана, своя полоса окна, экран входа",
+  "private": true,
+  "type": "module",
+  "files": [
+    "ui"
+  ],
+  "exports": {
+    "./ui": "./ui/index.ts",
+    "./ui/styles.css": "./ui/styles.css",
+    "./ui/fonts": "./ui/fonts.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit -p ui/tsconfig.json"
+  },
+  "peerDependencies": {
+    "@fontsource/geologica": "^5.3.0",
+    "@fontsource/golos-text": "^5.3.0",
+    "@tauri-apps/api": "^2.12.4",
+    "react": "^19.3.1"
+  },
+  "devDependencies": {
+    "@fontsource/geologica": "^5.3.0",
+    "@fontsource/golos-text": "^5.3.0",
+    "@tauri-apps/api": "^2.12.4",
+    "@types/react": "^19.3.0",
+    "react": "^19.3.1",
+    "typescript": "~5.9.3"
+  }
+}
