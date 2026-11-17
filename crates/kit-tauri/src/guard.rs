@@ -19,6 +19,8 @@ use tauri::{AppHandle, Emitter, Manager, Runtime};
 pub const LOCKED: &str = "locked";
 /// Событие экрану: приложение заблокировалось само.
 pub const LOCKED_EVENT: &str = "locked";
+/// Ответ команд входа, пока приложение запускается.
+pub const STARTING: &str = "приложение ещё открывается — повторите через несколько секунд";
 /// Через сколько в фоне снова спрашивать вход.
 const LOCK_AFTER: Duration = Duration::from_secs(5 * 60);
 /// Сколько действует подтверждение устройством для нового PIN-кода.
@@ -413,19 +415,21 @@ async fn system_auth<R: Runtime>(app: &AppHandle<R>, names: &AppNames, reason: &
     }
 }
 
-fn lock_of<R: Runtime>(app: &AppHandle<R>) -> Lock {
-    app.state::<Lock>().inner().clone()
+/// Вход этого приложения. Пока приложение запускается и ещё не создало [`Lock`], команда получает
+/// понятный отказ, а не падает.
+fn lock_of<R: Runtime>(app: &AppHandle<R>) -> Res<Lock> {
+    app.try_state::<Lock>().map(|l| l.inner().clone()).ok_or_else(|| STARTING.to_string())
 }
 
 async fn reply<R: Runtime>(app: &AppHandle<R>, error: Option<String>) -> Res<LockStatus> {
-    let lock = lock_of(app);
+    let lock = lock_of(app)?;
     let bio = bio_info(app, &lock.0.names).await;
     lock.status(&bio, error)
 }
 
 /// Работа с PIN-кодом в фоновом потоке: Argon2 не должен держать главный поток.
 async fn blocking<R: Runtime, T: Send + 'static>(app: &AppHandle<R>, f: impl FnOnce(&Lock) -> Res<T> + Send + 'static) -> Res<T> {
-    let lock = lock_of(app);
+    let lock = lock_of(app)?;
     tauri::async_runtime::spawn_blocking(move || f(&lock)).await.map_err(err)?
 }
 
@@ -459,7 +463,7 @@ pub async fn pin_off<R: Runtime>(app: AppHandle<R>, current: Option<String>) -> 
 
 #[tauri::command]
 pub async fn bio_unlock<R: Runtime>(app: AppHandle<R>) -> Res<LockStatus> {
-    let lock = lock_of(&app);
+    let lock = lock_of(&app)?;
     if !lock.meta_is(pin::META_BIO, "1") {
         return reply(&app, Some("Вход по отпечатку выключен".into())).await;
     }
@@ -479,7 +483,7 @@ pub async fn bio_unlock<R: Runtime>(app: AppHandle<R>) -> Res<LockStatus> {
 /// Включает или выключает вход по отпечатку. Включение сразу проверяет отпечаток.
 #[tauri::command]
 pub async fn bio_set<R: Runtime>(app: AppHandle<R>, on: bool) -> Res<LockStatus> {
-    let lock = lock_of(&app);
+    let lock = lock_of(&app)?;
     {
         let g = lock.state()?;
         if g.locked {
@@ -510,7 +514,7 @@ pub async fn bio_set<R: Runtime>(app: AppHandle<R>, on: bool) -> Res<LockStatus>
 /// «Забыли PIN?»: проверка блокировкой устройства, после неё можно задать новый PIN.
 #[tauri::command]
 pub async fn pin_recover<R: Runtime>(app: AppHandle<R>) -> Res<LockStatus> {
-    let lock = lock_of(&app);
+    let lock = lock_of(&app)?;
     let names = lock.0.names;
     let error = match system_auth(&app, &names, &format!("Сброс PIN-кода «{}»", names.name_gen), true).await {
         Ok(true) => {
@@ -525,7 +529,7 @@ pub async fn pin_recover<R: Runtime>(app: AppHandle<R>) -> Res<LockStatus> {
 
 #[tauri::command]
 pub async fn lock_now<R: Runtime>(app: AppHandle<R>) -> Res<LockStatus> {
-    lock_of(&app).lock_now()?;
+    lock_of(&app)?.lock_now()?;
     reply(&app, None).await
 }
 
@@ -539,7 +543,7 @@ pub async fn app_visible<R: Runtime>(app: AppHandle<R>, visible: bool) -> Res<Lo
 /// Окно потеряло или получило фокус: через 5 минут в фоне приложение блокируется.
 /// Приложение вызывает это из `on_window_event` на `WindowEvent::Focused`.
 pub fn on_focus<R: Runtime>(app: &AppHandle<R>, focused: bool) {
-    let lock = lock_of(app);
+    let Ok(lock) = lock_of(app) else { return };
     if lock.focus_changed(focused, lock.lock_after()) {
         let _ = app.emit(LOCKED_EVENT, ());
     }
@@ -712,6 +716,19 @@ mod tests {
         let bio = Bio { ready: false, kind: "", recover: "" };
         assert_eq!(s.lock.status(&bio, None).unwrap().notice.as_deref(), Some("Прежнюю базу не удалось открыть"));
         assert_eq!(s.lock.status(&bio, None).unwrap().notice, None);
+    }
+
+    /// Экран или окно обратились раньше, чем приложение создало вход: отказ, а не падение.
+    #[test]
+    fn before_the_app_is_ready_commands_refuse_politely() {
+        let app = tauri::test::mock_builder().build(tauri::test::mock_context(tauri::test::noop_assets())).unwrap();
+        let h = app.handle().clone();
+        on_focus(&h, true);
+        tauri::async_runtime::block_on(async {
+            assert_eq!(lock_status(h.clone()).await.unwrap_err(), STARTING);
+            assert_eq!(pin_unlock(h.clone(), "2580".into()).await.unwrap_err(), STARTING);
+            assert_eq!(lock_now(h.clone()).await.unwrap_err(), STARTING);
+        });
     }
 
     /// Команды через Tauri: то, что вызывает экран.
