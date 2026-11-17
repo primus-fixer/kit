@@ -1,0 +1,88 @@
+name: Сборка для Windows
+
+# Общая сборка установщика для Windows — для приложений на kit. Приложение вызывает её из своего
+# сценария сборок:
+#
+#   jobs:
+#     windows:
+#       uses: primus-fixer/kit/.github/workflows/windows.yml@<версия kit>
+#       with:
+#         mcp-tool: add_title
+#
+# Приложение лежит в папке app/ (Tauri 2, npm); имя программы — из app/src-tauri/tauri.conf.json.
+# Готовые файлы — в артефакте «<программа>-windows»: установщик .exe и .msi.
+
+on:
+  workflow_call:
+    inputs:
+      tests:
+        description: Пакеты Rust, которые проверить на Windows перед сборкой (аргументы cargo test), например «-p karman-secure»
+        type: string
+        default: ''
+      mcp-tool:
+        description: Инструмент коннектора для Claude, который должен быть в ответе «<программа>.exe --mcp» на tools/list; пусто — без проверки
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows — установщик
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: windows
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Имя программы
+        id: app
+        shell: bash
+        run: echo "bin=$(node -p "require('./app/src-tauri/tauri.conf.json').mainBinaryName")" >> "$GITHUB_OUTPUT"
+      - name: Проверки на Windows
+        if: inputs.tests != ''
+        shell: bash
+        env:
+          TESTS: ${{ inputs.tests }}
+        # «-p a -p b» — несколько пакетов: строка делится на аргументы по пробелам.
+        run: |
+          read -ra ARGS <<< "$TESTS"
+          cargo test "${ARGS[@]}"
+      - name: Пакеты интерфейса
+        run: npm ci
+        working-directory: app
+      - name: Сборка
+        run: npm run tauri build
+        working-directory: app
+      # Приложение Claude запускает «<программа>.exe --mcp» и говорит с ним через stdio — проверяем,
+      # что программа без окна консоли отвечает по протоколу MCP и знает свои инструменты.
+      - name: Коннектор для Claude отвечает через stdio
+        if: inputs.mcp-tool != ''
+        shell: pwsh
+        env:
+          BIN: ${{ steps.app.outputs.bin }}
+          TOOL: ${{ inputs.mcp-tool }}
+        run: |
+          $req = @(
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}',
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}',
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+          ) -join "`n"
+          $out = $req | & "target/release/$env:BIN.exe" --mcp | Out-String
+          Write-Output $out
+          if ($out -notmatch '"serverInfo"' -or $out -notmatch ('"' + [regex]::Escape($env:TOOL) + '"')) { throw "$env:BIN.exe --mcp не ответил" }
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: ${{ steps.app.outputs.bin }}-windows
+          path: |
+            target/release/bundle/nsis/*.exe
+            target/release/bundle/msi/*.msi
+          if-no-files-found: error
+          retention-days: 14

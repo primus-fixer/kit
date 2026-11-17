@@ -59,3 +59,16 @@ jobs:
           key: android
       # Только код работы с Keystore; вход целиком собирается сборкой приложения под Android.
       - run: cargo check -p kit-secure -p kit-core --target aarch64-linux-android
+
+  scripts:
+    name: Сборки — сценарии и донастройка Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - name: Донастройка Android на образце проекта Tauri
+        run: bash scripts/test-android-patch.sh
+      # shellcheck уже есть на сервере GitHub; actionlint проверяет и сценарии, и команды в них.
+      - name: Сценарии GitHub и скрипты
+        run: |
+          shellcheck scripts/*.sh
+          pipx run --spec actionlint-py==1.7.12.25 actionlint
