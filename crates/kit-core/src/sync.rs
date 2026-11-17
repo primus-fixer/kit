@@ -472,4 +472,4 @@ pub fn run_server<J: Journal>(p: &Profile, w: &mut impl Wire, store: &Mutex<J>, 
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

@@ -6,16 +6,16 @@ use std::sync::Arc;
 
 /// Событие для проверок: устройство, номер и содержимое.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-struct Ev {
-    device: String,
-    seq: u64,
-    body: Value,
+pub(crate) struct Ev {
+    pub(crate) device: String,
+    pub(crate) seq: u64,
+    pub(crate) body: Value,
 }
 
 #[derive(Clone, Debug)]
-struct F {
-    id: String,
-    size: u64,
+pub(crate) struct F {
+    pub(crate) id: String,
+    pub(crate) size: u64,
 }
 
 impl FileInfo for F {
@@ -29,23 +29,23 @@ impl FileInfo for F {
 
 /// Журнал в памяти. Вложение подходит, если его номер — «b-<длина>».
 #[derive(Default)]
-struct Mem {
-    device: String,
-    events: Vec<Ev>,
-    blobs: BTreeMap<String, (String, Vec<u8>)>,
-    refs: Vec<String>,
-    files_on: bool,
-    files: BTreeMap<String, Vec<u8>>,
-    wanted: Vec<F>,
-    partial: BTreeMap<String, Vec<u8>>,
-    part: usize,
+pub(crate) struct Mem {
+    pub(crate) device: String,
+    pub(crate) events: Vec<Ev>,
+    pub(crate) blobs: BTreeMap<String, (String, Vec<u8>)>,
+    pub(crate) refs: Vec<String>,
+    pub(crate) files_on: bool,
+    pub(crate) files: BTreeMap<String, Vec<u8>>,
+    pub(crate) wanted: Vec<F>,
+    pub(crate) partial: BTreeMap<String, Vec<u8>>,
+    pub(crate) part: usize,
 }
 
 impl Mem {
-    fn new(device: &str) -> Mem {
+    pub(crate) fn new(device: &str) -> Mem {
         Mem { device: device.into(), part: 1000, ..Default::default() }
     }
-    fn add(&mut self, body: Value) {
+    pub(crate) fn add(&mut self, body: Value) {
         let seq = self.events.iter().filter(|e| e.device == self.device).count() as u64 + 1;
         self.events.push(Ev { device: self.device.clone(), seq, body });
     }
@@ -154,8 +154,8 @@ impl Wire for Plain {
     }
 }
 
-const POLKA: Profile = Profile { version: "0.11.6", files_flag: false, old_peer: "", chunked_since: Some((0, 8)) };
-const KARMAN: Profile = Profile { version: "0.15.7", files_flag: true, old_peer: "На другом устройстве старая версия", chunked_since: None };
+pub(crate) const POLKA: Profile = Profile { version: "0.11.6", files_flag: false, old_peer: "", chunked_since: Some((0, 8)) };
+pub(crate) const KARMAN: Profile = Profile { version: "0.15.7", files_flag: true, old_peer: "На другом устройстве старая версия", chunked_since: None };
 
 /// Обмен по-настоящему, через TCP: `a` подключается к `b`. Возвращает отчёты и то, что ушло по сети.
 fn exchange(pa: Profile, a: Mem, pb: Profile, b: Mem) -> (Result<SyncReport>, Result<SyncReport>, Mem, Mem, Vec<String>) {
