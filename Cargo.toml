@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = ["crates/kit-core", "crates/kit-secure", "crates/kit-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+publish = false
+repository = "https://github.com/primus-fixer/kit"
+
+# PIN-код в отладочной сборке иначе считается по секунде.
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3
