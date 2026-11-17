@@ -40,8 +40,11 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: windows
-      # Ключ, сохранённый приложениями до модуля, открывается модулем; вход собирается с Windows Hello.
-      - run: cargo test
+      # Ключ, сохранённый приложениями до модуля, открывается модулем.
+      - run: cargo test -p kit-secure -p kit-core
+      # Вход с Windows Hello здесь только собирается: проверочная программа с Tauri на Windows
+      # не запускается без описания окна (0xc0000139), сами проверки входа идут на Linux.
+      - run: cargo check -p kit-tauri --all-targets
 
   android:
     name: Android — ключ в Keystore собирается
