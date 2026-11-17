@@ -14,6 +14,7 @@
 | Правила дизайна: кнопки, отступы, шрифты, экраны | [docs/design.md](docs/design.md) | 0.1.0 |
 | Сборки: установщик для Windows, APK для Android, общая донастройка Android | `.github/workflows/windows.yml`, `android.yml`, `scripts/android-patch.sh` | 0.2.0 |
 | Интерфейс: цвета и темы, шрифты, общие стили, элементы экрана, своя полоса окна, экран входа | `ui/` (пакет npm `@primus-fixer/kit`) | 0.3.0 |
+| Коннектор для Claude: протокол MCP, доказательство ключа связи, файл расширения `.mcpb` | `crates/kit-core` (`mcp`) | 0.4.0 |
 
 Что переедет дальше и в каком порядке — [docs/plan.md](docs/plan.md).
 
@@ -50,6 +51,10 @@ pub const KEYS: KeyNames = KeyNames { dpapi_entropy: b"polka-db-key-v1", dpapi_l
 3. сообщать о фокусе окна: `kit_tauri::guard::on_focus(app, focused)`.
 
 Перед работой с данными приложение спрашивает `lock.check()`: пока оно заблокировано, ответ — `locked`.
+
+Коннектор для Claude (`kit_core::mcp`): приложение описывает себя — `Server` (имя, подсказка для Claude,
+строка ключа связи), `Extension` (как расширение называется в приложении Claude) и список `Tool` — и
+отдаёт строки запросов в `mcp::handle`. **Строку ключа связи у выпущенного приложения менять нельзя.**
 
 ## Интерфейс
 
