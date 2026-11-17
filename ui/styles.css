@@ -397,6 +397,11 @@ p {
   min-height: 48px;
 }
 
+.btn.own {
+  background: var(--own);
+  color: var(--onOwn);
+}
+
 .btn.warn {
   background: var(--warn);
   color: #fff;
@@ -488,6 +493,18 @@ p {
   color: var(--bg);
 }
 
+/* Выбранное своим цветом: личное и рабочее. */
+
+.seg button.on.own {
+  background: var(--own);
+  color: var(--onOwn);
+}
+
+.seg button.on.work {
+  background: var(--work);
+  color: var(--onWork);
+}
+
 .seg .icon-seg {
   display: grid;
   place-items: center;
@@ -554,10 +571,12 @@ p {
   font-size: 14px;
 }
 
+/* Цвет выбранного можно задать на обёртке: --accent и --tint (например, рабочий для командировки). */
+
 .chip.sel {
-  border-color: var(--own);
-  background: var(--ownBg);
-  color: var(--own);
+  border-color: var(--accent, var(--own));
+  background: var(--tint, var(--ownBg));
+  color: var(--accent, var(--own));
 }
 
 .field {
@@ -573,7 +592,10 @@ p {
   color: var(--ink2);
 }
 
-.field input,
+/* Поле ввода: внутри .field — само, отдельно стоящее — классом .input (input, select, textarea). */
+
+.field input:where(:not([type='checkbox'], [type='radio'])),
+.input,
 .note {
   width: 100%;
   min-height: 46px;
@@ -584,10 +606,15 @@ p {
   color: var(--ink);
 }
 
-.note {
+.note,
+textarea.input {
   padding: 10px 12px;
   resize: vertical;
   line-height: 21px;
+}
+
+select.input {
+  appearance: auto;
 }
 
 .tags {
@@ -603,6 +630,26 @@ p {
   color: var(--ink2);
   font-size: 12px;
   line-height: 18px;
+}
+
+.tag.work {
+  background: var(--workBg);
+  color: var(--work);
+}
+
+.tag.own {
+  background: var(--ownBg);
+  color: var(--own);
+}
+
+.tag.warn {
+  background: var(--warnBg);
+  color: var(--warn);
+}
+
+.tag.pos {
+  background: color-mix(in srgb, var(--pos) 16%, transparent);
+  color: var(--pos);
 }
 
 /* Пустой экран — по центру: фраза и кнопка. */
@@ -710,7 +757,8 @@ p {
 
 .legend {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 6px 12px;
 }
 
 .legend span {
@@ -1000,4 +1048,113 @@ p {
 :root.own-titlebar .sheet-back,
 :root.own-titlebar .lock {
   top: var(--tb);
+}
+
+/* Формы в разделах настроек: поля и кнопки под чертой. */
+
+.key-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.key-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Связь по Wi-Fi и облако — общие разделы (wifi.tsx, cloud.tsx). */
+
+.wifi-sub {
+  margin-top: 6px;
+}
+
+.peerrow {
+  border-top: 1px solid var(--line);
+}
+
+.peerrow .row {
+  border-top: 0;
+}
+
+.peer-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.paircard {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surf);
+}
+
+.paircode {
+  margin: 0;
+  font-family: var(--num);
+  font-size: 34px;
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.qr {
+  align-self: center;
+  width: 232px;
+  height: 232px;
+  padding: 8px;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.qr svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.codefield {
+  font-family: var(--num);
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ok-text {
+  color: var(--pos);
+}
+
+.cloud-form-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.cloud-last {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 2px;
+}
+
+.cloud-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.cloud-check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--warn);
 }

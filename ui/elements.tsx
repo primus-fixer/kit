@@ -4,7 +4,8 @@ import { useState, type ReactNode } from 'react';
 import { Icon } from './icons';
 import { store, stored } from './storage';
 
-export function Seg<T extends string>({ value, options, onChange, label, cols, small }: { value: T; options: [T, string][]; onChange: (v: T) => void; label: string; cols?: boolean; small?: boolean }) {
+/** Переключатель. У варианта может быть цвет выбранного: 'own' — личное, 'work' — рабочее. `cols` — колонки поровну. */
+export function Seg<T extends string>({ value, options, onChange, label, cols, small }: { value: T; options: [T, string, ('own' | 'work')?][]; onChange: (v: T) => void; label: string; cols?: boolean; small?: boolean }) {
   return (
     <div
       className={`seg${small ? ' small' : ''}`}
@@ -12,8 +13,8 @@ export function Seg<T extends string>({ value, options, onChange, label, cols, s
       aria-label={label}
       style={cols ? { gridTemplateColumns: `repeat(${options.length}, minmax(max-content, 1fr))` } : { gridAutoFlow: 'column', gridAutoColumns: 'auto' }}
     >
-      {options.map(([v, l]) => (
-        <button key={v} type="button" className={v === value ? 'on' : ''} aria-pressed={v === value} onClick={() => onChange(v)}>
+      {options.map(([v, l, tone]) => (
+        <button key={v} type="button" className={v === value ? (tone ? `on ${tone}` : 'on') : ''} aria-pressed={v === value} onClick={() => onChange(v)}>
           {l}
         </button>
       ))}
@@ -21,20 +22,26 @@ export function Seg<T extends string>({ value, options, onChange, label, cols, s
   );
 }
 
-export function Bar({ pct, color = 'var(--own)', thick }: { pct: number; color?: string; thick?: boolean }) {
+/** Полоска доли. `label` — что она показывает, для чтения с экрана; без подписи полоска только для глаз. */
+export function Bar({ pct, color = 'var(--own)', thick, label }: { pct: number; color?: string; thick?: boolean; label?: string }) {
   return (
-    <span className={`bar${thick ? ' thick' : ''}`}>
+    <span className={`bar${thick ? ' thick' : ''}`} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
       <span style={{ width: `${Math.max(0, Math.min(100, pct))}%`, background: color }} />
     </span>
   );
 }
 
-/** Раздел под катом: заголовок — кнопка, содержимое — по нажатию; открытые разделы запоминаются на устройстве. */
-export function Cut({ id, title, hint, className, children }: { id: string; title: string; hint?: string; className?: string; children: ReactNode }) {
-  const [open, setOpen] = useState(() => stored(`cut.${id}`, '0') === '1');
+/**
+ * Раздел под катом: заголовок — кнопка, содержимое — по нажатию; открытые разделы запоминаются на устройстве.
+ * Если приложение само открывает разделы (переход к разделу из другого экрана), оно передаёт `open` и `onToggle`.
+ */
+export function Cut({ id, title, hint, className, open: shown, onToggle, children }: { id: string; title: string; hint?: string; className?: string; open?: boolean; onToggle?: (open: boolean) => void; children: ReactNode }) {
+  const [own, setOwn] = useState(() => stored(`cut.${id}`, '0') === '1');
+  const open = shown ?? own;
   const toggle = () => {
+    if (onToggle) return onToggle(!open);
     store(`cut.${id}`, open ? '0' : '1');
-    setOpen(!open);
+    setOwn(!open);
   };
   return (
     <section className={`cut${open ? ' open' : ''}${className ? ` ${className}` : ''}`} id={id}>
