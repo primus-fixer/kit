@@ -42,6 +42,10 @@ const MAX_PARTS: usize = MAX_FILES * 14 + 16;
 pub trait FileInfo: Clone {
     fn id(&self) -> &str;
     fn size(&self) -> u64;
+    /// Как файл назвать в сообщении («Файл книги «…»: …»).
+    fn name(&self) -> &str {
+        self.id()
+    }
 }
 
 /// Больших файлов у приложения нет.
