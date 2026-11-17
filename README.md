@@ -13,6 +13,7 @@
 | Вход: PIN-код, отпечаток, Windows Hello, автоблокировка — команды для экрана | `crates/kit-tauri` | 0.1.0 |
 | Правила дизайна: кнопки, отступы, шрифты, экраны | [docs/design.md](docs/design.md) | 0.1.0 |
 | Сборки: установщик для Windows, APK для Android, общая донастройка Android | `.github/workflows/windows.yml`, `android.yml`, `scripts/android-patch.sh` | 0.2.0 |
+| Интерфейс: цвета и темы, шрифты, общие стили, элементы экрана, своя полоса окна, экран входа | `ui/` (пакет npm `@primus-fixer/kit`) | 0.3.0 |
 
 Что переедет дальше и в каком порядке — [docs/plan.md](docs/plan.md).
 
@@ -49,6 +50,36 @@ pub const KEYS: KeyNames = KeyNames { dpapi_entropy: b"polka-db-key-v1", dpapi_l
 3. сообщать о фокусе окна: `kit_tauri::guard::on_focus(app, focused)`.
 
 Перед работой с данными приложение спрашивает `lock.check()`: пока оно заблокировано, ответ — `locked`.
+
+## Интерфейс
+
+Пакет npm `@primus-fixer/kit` — прямо из этого репозитория, без сборки: исходники TypeScript собирает
+Vite приложения. В `app/package.json`:
+
+```json
+"@primus-fixer/kit": "git+https://github.com/primus-fixer/kit.git#<версия kit>"
+```
+
+В `main.tsx` — шрифты и общие стили, затем свои стили приложения:
+
+```ts
+import '@primus-fixer/kit/ui/fonts';
+import '@primus-fixer/kit/ui/styles.css';
+import './styles.css';
+```
+
+Что есть в `@primus-fixer/kit/ui`:
+
+- `SCHEMES`, `applyTheme` — пять цветовых схем, светлая и тёмная тема;
+- `Icon`, `addIcons` — значки; свои приложение добавляет к значкам kit;
+- `Seg`, `Cut`, `Row`, `Header`, `Bar` — переключатель, раздел под катом, строка, верхняя строка, полоса;
+- `TitleBar`, `customTitleBar`, `setTitleBarColors` — своя полоса окна на компьютере;
+- `LockScreen`, `PinFlow`, `bioLabel`, `lockCommands` — экран входа и экраны PIN-кода. Название
+  приложения (`names`) и команды входа (`api`) передаёт приложение: в самом приложении это
+  `lockCommands()` — команды `kit-tauri`, в демо в браузере — свои;
+- `stored`, `store` — настройки вида на этом устройстве.
+
+Как ими пользоваться и какие у элементов классы — [docs/design.md](docs/design.md).
 
 ## Сборки
 
@@ -99,6 +130,7 @@ jobs:
 ```
 cargo test
 bash scripts/test-android-patch.sh
+npm ci && npm run check      # типы интерфейса
 ```
 
 На Windows дополнительно проверяется, что ключ, сохранённый «Полкой» и «Карманом» до модуля,

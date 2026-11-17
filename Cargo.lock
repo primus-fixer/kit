@@ -1694,7 +1694,7 @@ dependencies = [
 
 [[package]]
 name = "kit-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "argon2",
  "getrandom 0.3.4",
@@ -1703,7 +1703,7 @@ dependencies = [
 
 [[package]]
 name = "kit-secure"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "jni",
  "ndk-context",
@@ -1714,7 +1714,7 @@ dependencies = [
 
 [[package]]
 name = "kit-tauri"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "kit-core",
  "kit-secure",
