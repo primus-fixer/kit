@@ -1,6 +1,6 @@
 {
   "name": "@primus-fixer/kit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Общий интерфейс приложений на kit: тема, элементы экрана, своя полоса окна, экран входа",
   "private": true,
   "type": "module",
