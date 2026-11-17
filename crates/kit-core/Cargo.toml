@@ -13,4 +13,6 @@ thiserror = "2"
 # Коннектор для Claude: ответы JSON, доказательство ключа связи (BLAKE2b), файл расширения .mcpb (ZIP).
 blake2 = "0.10"
 serde_json = "1"
+# Связь коннектора: файл связи и строки обмена посредника с приложением.
+serde = { version = "1", features = ["derive"] }
 zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
