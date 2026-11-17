@@ -8,6 +8,9 @@ repository.workspace = true
 
 [dependencies]
 argon2 = "0.5"
+# Резервная копия: ключ файла и куски — XChaCha20-Poly1305 (STREAM), ключ копий в базе — base64.
+chacha20poly1305 = { version = "0.10", features = ["stream"] }
+base64 = "0.22"
 getrandom = "0.3"
 thiserror = "2"
 # Коннектор для Claude: ответы JSON, доказательство ключа связи (BLAKE2b), файл расширения .mcpb (ZIP).
