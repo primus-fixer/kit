@@ -27,6 +27,9 @@ pub enum Error {
     /// Пакет канала не расшифровался: не тот ключ, пакет изменён, повторён или не на своём месте.
     #[error("пакет не расшифровался")]
     Decrypt,
+    /// Связь по Wi-Fi: что случилось ([`crate::lan::LanFail`]) и что сказать человеку.
+    #[error("{1}")]
+    Lan(crate::lan::LanFail, String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
