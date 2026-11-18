@@ -9,3 +9,7 @@ node_modules
 *.jks
 *.keystore
 *-secrets.txt
+
+# Заготовка: версии библиотек фиксирует уже приложение, сделанное из неё.
+/template/Cargo.lock
+/template/app/package-lock.json

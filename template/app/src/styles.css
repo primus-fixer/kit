@@ -1,0 +1,18 @@
+/* Свои стили приложения — то, чего нет в общих стилях kit (они подключаются раньше, main.tsx).
+   Правила вида — docs/design.md в kit. */
+
+.note-row {
+  align-items: baseline;
+}
+
+.note-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Название в боковом меню: размер kit (60) — для коротких названий вроде «Полки»; длинное — мельче,
+   чтобы поместилось в ширину меню. Подберите под своё название. */
+.wordmark {
+  font-size: 38px;
+  line-height: 44px;
+}

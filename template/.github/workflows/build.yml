@@ -1,0 +1,36 @@
+name: Сборки
+
+# Установщик и APK собираются после слияния в main и по кнопке (Actions → Сборки → Run workflow,
+# на любой ветке), а не на каждый push: сборки под Windows и Android тратят больше всего минут
+# GitHub Actions. Правка только описаний сборку не запускает.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+# Сборкам токен GitHub нужен только для чтения кода.
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Установщик для Windows и APK для Android собирают общие сценарии kit (https://github.com/primus-fixer/kit).
+  windows:
+    uses: primus-fixer/kit/.github/workflows/windows.yml@KIT_REV # kit KIT_VERSION
+  android:
+    uses: primus-fixer/kit/.github/workflows/android.yml@KIT_REV # kit KIT_VERSION
+    with:
+      title: Заготовка
+      key-alias: starter
+      kit-ref: KIT_REV
+    secrets:
+      ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      # Псевдоним ключа: starter, если не задан этим секретом.
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
