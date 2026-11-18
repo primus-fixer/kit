@@ -2115,7 +2115,7 @@ dependencies = [
 
 [[package]]
 name = "kit-cloud"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "base64 0.22.1",
  "kit-core",
@@ -2126,7 +2126,7 @@ dependencies = [
 
 [[package]]
 name = "kit-core"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "argon2",
  "base64 0.22.1",
@@ -2145,7 +2145,7 @@ dependencies = [
 
 [[package]]
 name = "kit-secure"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "jni",
  "ndk-context",
@@ -2156,7 +2156,7 @@ dependencies = [
 
 [[package]]
 name = "kit-tauri"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "base64 0.22.1",
  "if-addrs",
