@@ -24,3 +24,8 @@ sha2 = "0.10"
 # Связь по Wi-Fi: общий ключ из кода связи (SPAKE2).
 spake2 = "0.4"
 zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+# База приложения (признак db): SQLCipher — та же сборка, что у приложений.
+rusqlite = { version = "0.42", features = ["bundled-sqlcipher-vendored-openssl"], optional = true }
+
+[features]
+db = ["dep:rusqlite"]

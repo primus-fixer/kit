@@ -1,6 +1,6 @@
 [package]
 name = "kit-tauri"
-description = "Общая часть приложений на Tauri: вход по PIN-коду, отпечатку и Windows Hello, блокировка"
+description = "Общая часть приложений на Tauri: вход по PIN-коду, отпечатку и Windows Hello, блокировка, связь по Wi-Fi и облако в приложении"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
@@ -8,14 +8,21 @@ repository.workspace = true
 
 [dependencies]
 kit-core = { path = "../kit-core" }
+kit-cloud = { path = "../kit-cloud" }
 kit-secure = { path = "../kit-secure" }
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tauri = { version = "2", features = [] }
+# Связь по Wi-Fi в приложении: адреса устройства, QR-код связи, ключи пары в базе (base64).
+base64 = "0.22"
+if-addrs = "0.13"
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+# Облако в приложении: страница Яндекс ID с паролями приложений открывается в браузере.
+tauri-plugin-opener = "2"
 
 # Вход по отпечатку — только на телефоне. Сам плагин подключает приложение.
 [target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
 tauri-plugin-biometric = "2"
 
 [dev-dependencies]
-serde_json = "1"
 tauri = { version = "2", features = ["test"] }
