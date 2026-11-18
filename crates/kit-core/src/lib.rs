@@ -3,8 +3,8 @@
 //! Здесь название приложения для сообщений ([`AppNames`]), PIN-код входа ([`pin`]), протокол
 //! коннектора для Claude ([`mcp`]), связь коннектора с запущенным приложением ([`link`]) и формат
 //! резервной копии ([`backup`]), протокол синхронизации устройств ([`sync`]), связь по Wi-Fi
-//! ([`lan`]), облако ([`cloud`]) и общая часть зашифрованной базы с журналом изменений (`db`,
-//! признак `db`) — см. `docs/plan.md`.
+//! ([`lan`]), облако ([`cloud`]), общая часть зашифрованной базы с журналом изменений (`db`,
+//! признак `db`) и записи приложения поверх неё (`store`, признак `store`) — см. `docs/plan.md`.
 
 pub mod backup;
 pub mod cloud;
@@ -15,6 +15,8 @@ pub mod lan;
 pub mod link;
 pub mod mcp;
 pub mod pin;
+#[cfg(feature = "store")]
+pub mod store;
 pub mod sync;
 
 pub use error::{Error, Result};
