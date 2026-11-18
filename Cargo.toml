@@ -1,9 +1,11 @@
 [workspace]
 resolver = "2"
 members = ["crates/kit-cloud", "crates/kit-core", "crates/kit-secure", "crates/kit-tauri"]
+# Заготовка нового приложения — своё рабочее пространство (template/Cargo.toml).
+exclude = ["template"]
 
 [workspace.package]
-version = "0.11.0"
+version = "0.12.0"
 edition = "2021"
 publish = false
 repository = "https://github.com/primus-fixer/kit"

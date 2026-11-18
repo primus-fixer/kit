@@ -1,0 +1,40 @@
+[package]
+name = "starter-app"
+description = "Заготовка — приложение на общем модуле kit"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[lib]
+name = "starter_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+getrandom = "0.3"
+starter-core = { path = "../../crates/starter-core" }
+# Общий модуль kit: ключ базы в хранилище системы, вход, обмен по Wi-Fi и через облако (https://github.com/primus-fixer/kit).
+# KIT — ссылки на kit; scripts/new-app.sh ставит их на коммит kit, из которого сделано приложение.
+kit-core = { path = "../../../crates/kit-core" } # KIT
+kit-secure = { path = "../../../crates/kit-secure" } # KIT
+kit-tauri = { path = "../../../crates/kit-tauri" } # KIT
+# Страница Яндекс ID, где создают пароль приложения для Диска.
+tauri-plugin-opener = "2"
+
+[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+# QR-код связи с компьютера — камерой телефона.
+tauri-plugin-barcode-scanner = "2"
+# Вход по отпечатку.
+tauri-plugin-biometric = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+# Второй запуск открывает уже работающее приложение.
+tauri-plugin-single-instance = "2"
+
+[dev-dependencies]
+tempfile = "3"

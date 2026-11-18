@@ -67,6 +67,8 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - name: Донастройка Android на образце проекта Tauri
         run: bash scripts/test-android-patch.sh
+      - name: Новое приложение из заготовки — названия, порты, метки, ссылки на kit
+        run: bash scripts/test-new-app.sh
       # shellcheck уже есть на сервере GitHub; actionlint проверяет и сценарии, и команды в них.
       - name: Сценарии GitHub и скрипты
         run: |
@@ -84,3 +86,32 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+
+  template:
+    name: Заготовка нового приложения — сборка и проверки
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: template
+          workspaces: template
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+      - name: Библиотеки WebKit для Tauri
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libsoup-3.0-dev
+      # Заготовка берёт kit из этого же репозитория (папкой), поэтому проверяет его нынешнее состояние.
+      - name: Интерфейс заготовки
+        working-directory: template/app
+        run: npm install --no-audit --no-fund && npm run build
+      - name: Ядро и мост заготовки
+        working-directory: template
+        run: |
+          cargo test
+          cargo clippy --all-targets -- -D warnings

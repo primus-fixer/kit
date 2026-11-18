@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = ["crates/starter-core", "app/src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[profile.release]
+strip = true
+
+# PIN-код, ключ копий и шифрование в отладочной сборке иначе считаются секундами.
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3
+
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.chacha20]
+opt-level = 3
+
+[profile.dev.package.poly1305]
+opt-level = 3
